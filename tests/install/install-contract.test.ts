@@ -32,6 +32,14 @@ describe("installer contract", () => {
     );
   });
 
+  it("passes a valid Node version expression through Windows PowerShell", async () => {
+    const windows = await readFile("install.ps1", "utf8");
+
+    expect(windows).toContain(
+      'node -p "process.versions.node.split(\'.\')[0]"',
+    );
+  });
+
   it("renders POSIX wrappers for paths containing shell metacharacters", () => {
     const repository = "/tmp/한글 & project|quote's";
     const rendered = renderPosixWrapper(repository, "safe");

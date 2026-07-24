@@ -34,7 +34,7 @@ foreach ($commandName in @("git", "node", "npm", "docker")) {
     }
 }
 
-$nodeMajor = [int]((& node -p 'process.versions.node.split(".")[0]').Trim())
+$nodeMajor = [int]((& node -p "process.versions.node.split('.')[0]").Trim())
 if ($nodeMajor -lt 24) {
     throw "Node.js 24 or newer is required."
 }
