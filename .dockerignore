@@ -1,0 +1,10 @@
+*
+!config/
+!config/settings.safe.json
+!config/AGENTS.md
+!extensions/
+!extensions/workspace-guard/
+!extensions/workspace-guard/*.ts
+!container/
+!container/Dockerfile
+!container/entrypoint.sh
