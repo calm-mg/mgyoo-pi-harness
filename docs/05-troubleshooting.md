@@ -78,7 +78,7 @@ git remote -v
 
 사용자 변경을 임의 stash, reset, clean하지 않습니다.
 
-fast-forward 뒤 설치·검사·doctor가 실패하면 `pi-update`는 업데이트 전 커밋을 기록해 두었다가 그 커밋으로 되돌리고 이전 설치기를 다시 실행합니다. 자동 복구까지 실패하면 출력된 정확한 이전 커밋과 `git reset --hard <커밋>` 복구 명령을 확인하세요. 이 명령은 harness 저장소에서만, `git status --short`가 비어 있을 때 사용합니다.
+fast-forward 뒤 설치·검사·doctor가 실패하면 `pi-update`는 현재 브랜치를 되돌리지 않습니다. 대신 업데이트 전 커밋의 detached 복구 worktree를 임시 경로에 만들고 그 버전의 설치기를 재실행합니다. 출력된 복구 경로는 새 버전 문제가 해결될 때까지 보존하세요. 자동 복구도 실패하면 출력된 `git worktree add --detach ... <이전-커밋>` 명령으로 별도 복구본을 만들 수 있습니다.
 
 ## backup 복구
 

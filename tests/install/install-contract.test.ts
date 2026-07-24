@@ -51,6 +51,7 @@ describe("installer contract", () => {
     expect(wrapper).toContain("한글 & 100% project");
     expect(wrapper).toContain("it''s");
     expect(wrapper).not.toContain("__REPOSITORY_ROOT__");
+    expect(wrapper.codePointAt(0)).toBe(0xfeff);
   });
 
   it("validates purge targets before recursive removal", async () => {

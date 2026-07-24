@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { RunRequest } from "../process.js";
 import { runDoctor } from "./doctor.js";
@@ -45,22 +47,30 @@ async function restorePreviousRevision(
   deps: CommandDeps,
 ): Promise<void> {
   const cwd = deps.paths.repositoryRoot;
-  deps.stderr.write(
-    `업데이트 활성화에 실패했습니다. 이전 커밋 ${previousHead} 복구를 시작합니다.\n`,
+  const recoveryRoot = join(
+    tmpdir(),
+    `mgyoo-pi-recovery-${randomUUID()}`,
   );
-  const resetCode = await deps.runner.run({
+  deps.stderr.write(
+    `업데이트 활성화에 실패했습니다. 이전 커밋 ${previousHead}의 detached 복구 worktree를 만듭니다.\n`,
+  );
+  const worktreeCode = await deps.runner.run({
     command: "git",
-    args: ["reset", "--hard", previousHead],
+    args: ["worktree", "add", "--detach", recoveryRoot, previousHead],
     cwd,
   });
   const installCode =
-    resetCode === 0 ? await deps.runner.run(installerRequest(cwd)) : resetCode;
-  if (resetCode === 0 && installCode === 0) {
-    deps.stderr.write(`이전 커밋 ${previousHead} 복구가 완료되었습니다.\n`);
+    worktreeCode === 0
+      ? await deps.runner.run(installerRequest(recoveryRoot))
+      : worktreeCode;
+  if (worktreeCode === 0 && installCode === 0) {
+    deps.stderr.write(
+      `현재 브랜치는 그대로 두고 이전 버전을 ${recoveryRoot}에서 재활성화했습니다. 새 버전 문제가 해결될 때까지 이 worktree를 보존하세요.\n`,
+    );
     return;
   }
   deps.stderr.write(
-    `자동 복구에 실패했습니다. 저장소에서 다음 명령을 실행하세요: git reset --hard ${previousHead}\n`,
+    `자동 복구에 실패했습니다. 현재 브랜치를 변경하지 말고 다음 명령으로 별도 복구본을 만드세요: git worktree add --detach "${recoveryRoot}" ${previousHead}\n`,
   );
 }
 

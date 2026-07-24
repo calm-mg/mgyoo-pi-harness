@@ -31,7 +31,7 @@ export function renderPosixWrapper(repositoryRoot, command) {
 
 export function renderPowerShellWrapper(repositoryRoot, command) {
   const cli = path.join(repositoryRoot, "dist", "src", "cli.js");
-  return [
+  return "\uFEFF" + [
     "$ErrorActionPreference = \"Stop\"",
     `$cli = ${powershellQuote(cli)}`,
     `& node $cli ${powershellQuote(command)} @args`,

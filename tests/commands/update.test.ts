@@ -92,11 +92,17 @@ describe("runUpdate", () => {
     const rendered = harness.calls.map(
       (call) => `${call.command} ${call.args.join(" ")}`,
     );
-    expect(rendered).toContain("git reset --hard abc123");
+    expect(
+      rendered.some((command) =>
+        command.startsWith("git worktree add --detach "),
+      ),
+    ).toBe(true);
+    expect(rendered.join("\n")).not.toContain("git reset --hard");
     expect(
       rendered.filter((command) => command.includes("install.")).length,
     ).toBe(2);
     expect(harness.stderr).toContain("abc123");
+    expect(harness.stderr).toContain("worktree");
     expect(harness.stderr).toContain("복구");
   });
 });
