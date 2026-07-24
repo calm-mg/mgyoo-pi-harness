@@ -30,7 +30,7 @@ jobs:
         run: npm run check && npm run build
       - name: Exercise POSIX installer plan
         if: runner.os != 'Windows'
-        run: MGYOO_PI_DRY_RUN=1 ./install.sh
+        run: MGYOO_PI_DRY_RUN=1 sh ./install.sh
       - name: Exercise Windows installer plan
         if: runner.os == 'Windows'
         shell: pwsh
@@ -45,4 +45,4 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
       - name: Verify safe-mode host boundary
-        run: ./tests/container/smoke.sh
+        run: sh ./tests/container/smoke.sh
