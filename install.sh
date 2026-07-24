@@ -45,7 +45,7 @@ backup_dir="$state_dir/backups/$timestamp"
 stage_dir="$state_dir/stage-$timestamp"
 mkdir -p "$backup_dir" "$stage_dir"
 
-for name in pi pi-yolo pi-login; do
+for name in pi pi-yolo pi-login pi-doctor pi-update; do
   if [ -e "$bin_dir/$name" ]; then
     cp "$bin_dir/$name" "$backup_dir/$name"
   fi
@@ -71,7 +71,9 @@ cat >"$state_dir/install-manifest.json" <<EOF
   "wrappers": [
     "$bin_dir/pi",
     "$bin_dir/pi-yolo",
-    "$bin_dir/pi-login"
+    "$bin_dir/pi-login",
+    "$bin_dir/pi-doctor",
+    "$bin_dir/pi-update"
   ],
   "backupDir": "$backup_dir"
 }

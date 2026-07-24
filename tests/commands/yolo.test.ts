@@ -13,6 +13,9 @@ describe("runYolo", () => {
           requests.push(request);
           return 7;
         },
+        async capture() {
+          return { code: 0, stdout: "", stderr: "" };
+        },
       },
       stdout: { write: (chunk: string) => (output += chunk) } as never,
       stderr: { write: () => true } as never,

@@ -27,7 +27,7 @@ describe("installer contract", () => {
     );
   });
 
-  it.each(["pi", "pi-yolo", "pi-login"])(
+  it.each(["pi", "pi-yolo", "pi-login", "pi-doctor", "pi-update"])(
     "POSIX %s wrapper forwards arguments without eval",
     async (name) => {
       const text = await readFile(`scripts/templates/${name}`, "utf8");
@@ -37,7 +37,7 @@ describe("installer contract", () => {
     },
   );
 
-  it.each(["pi", "pi-yolo", "pi-login"])(
+  it.each(["pi", "pi-yolo", "pi-login", "pi-doctor", "pi-update"])(
     "Windows %s wrapper forwards arguments",
     async (name) => {
       const text = await readFile(`scripts/templates/${name}.cmd`, "utf8");

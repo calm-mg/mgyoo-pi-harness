@@ -16,6 +16,9 @@ function createDeps() {
           requests.push(request);
           return 0;
         },
+        async capture() {
+          return { code: 0, stdout: "", stderr: "" };
+        },
       },
       stdout: { write: (chunk: string) => (output += chunk) } as never,
       stderr: { write: (chunk: string) => (error += chunk) } as never,

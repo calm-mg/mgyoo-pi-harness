@@ -1,6 +1,8 @@
 import { runLogin } from "./commands/login.js";
+import { runDoctor } from "./commands/doctor.js";
 import { runSafe } from "./commands/safe.js";
 import type { CommandDeps } from "./commands/types.js";
+import { runUpdate } from "./commands/update.js";
 import { runYolo } from "./commands/yolo.js";
 import { HARNESS_NAME, PI_VERSION } from "./constants.js";
 import { resolveHarnessPaths } from "./paths.js";
@@ -21,14 +23,20 @@ async function main(): Promise<number> {
     return 0;
   }
   if (command === "--help") {
-    console.log(`Usage: ${HARNESS_NAME} [safe|yolo|login] [args...]`);
+    console.log(
+      `Usage: ${HARNESS_NAME} [safe|yolo|login|doctor|update] [args...]`,
+    );
     return 0;
   }
   if (command === "safe") return runSafe(args, deps);
   if (command === "yolo") return runYolo(args, deps);
   if (command === "login") return runLogin(args[0], deps);
+  if (command === "doctor") return runDoctor(args, deps);
+  if (command === "update") return runUpdate(args, deps);
 
-  console.error(`Unknown command: ${command}. Use safe, yolo, or login.`);
+  console.error(
+    `Unknown command: ${command}. Use safe, yolo, login, doctor, or update.`,
+  );
   return 2;
 }
 

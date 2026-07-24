@@ -60,7 +60,7 @@ $backupDir = Join-Path $stateDir "backups\$timestamp"
 $stageDir = Join-Path $stateDir "stage-$timestamp"
 New-Item -ItemType Directory -Force -Path $backupDir, $stageDir | Out-Null
 
-foreach ($name in @("pi", "pi-yolo", "pi-login")) {
+foreach ($name in @("pi", "pi-yolo", "pi-login", "pi-doctor", "pi-update")) {
     $destination = Join-Path $binDir "$name.cmd"
     if (Test-Path -LiteralPath $destination) {
         Copy-Item -LiteralPath $destination -Destination $backupDir
@@ -90,7 +90,9 @@ $manifest = [ordered]@{
     wrappers = @(
         (Join-Path $binDir "pi.cmd"),
         (Join-Path $binDir "pi-yolo.cmd"),
-        (Join-Path $binDir "pi-login.cmd")
+        (Join-Path $binDir "pi-login.cmd"),
+        (Join-Path $binDir "pi-doctor.cmd"),
+        (Join-Path $binDir "pi-update.cmd")
     )
     backupDir = $backupDir
 }

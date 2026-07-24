@@ -46,6 +46,9 @@ describe("runSafe", () => {
           requests.push(request);
           return 0;
         },
+        async capture() {
+          return { code: 0, stdout: "", stderr: "" };
+        },
       },
       stdout: { write: () => true } as never,
       stderr: { write: () => true } as never,
