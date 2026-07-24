@@ -58,6 +58,9 @@ export async function classifyPath(
   }
 
   const canonical = await canonicalizeNewPath(absolute);
+  if (isSecretPath(canonical)) {
+    return { allowed: false, reason: "Secret files are protected" };
+  }
   if (!isContained(workspace, canonical)) {
     return { allowed: false, reason: "Path escapes the workspace" };
   }

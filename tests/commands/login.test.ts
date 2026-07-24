@@ -41,7 +41,7 @@ describe("runLogin", () => {
     expect(harness.readOutput()).toContain("/login");
     expect(harness.requests[0]?.command).toBe("docker");
     expect(harness.requests[0]?.args).toContain(
-      "type=volume,source=mgyoo-pi-safe-agent,target=/root/.pi/agent",
+      "type=volume,source=mgyoo-pi-safe-agent,target=/pi-agent",
     );
     expect(harness.requests[0]?.args.join(" ")).not.toContain("type=bind");
   });

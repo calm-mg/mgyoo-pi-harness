@@ -4,6 +4,12 @@ export type CommandDecision =
 
 const rules = [
   {
+    id: "secret-access",
+    pattern:
+      /(?:^|[\s"'=\\/])(?:\.env(?:\.[A-Za-z0-9_-]+)?|id_(?:rsa|ed25519)|[^/\s"'=\\]+\.(?:pem|key))(?:$|[\s"';&|])/i,
+    reason: "Access to protected secret files is disabled in safe mode",
+  },
+  {
     id: "privilege-escalation",
     pattern: /\b(?:sudo|doas)\b/i,
     reason: "Privilege escalation is disabled in safe mode",

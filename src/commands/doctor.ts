@@ -1,7 +1,15 @@
-import { access, readFile } from "node:fs/promises";
-import { homedir } from "node:os";
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { IMAGE_NAME, SAFE_VOLUME } from "../constants.js";
+import { buildSafeDockerArgs } from "../docker.js";
 import type { RunRequest } from "../process.js";
 import type { CommandDeps } from "./types.js";
 
@@ -154,26 +162,49 @@ export async function collectDoctorResults(
     });
   }
 
-  results.push(
-    await captureCheck(
+  const probeRoot = await mkdtemp(join(tmpdir(), "mgyoo-pi-doctor-"));
+  const probeWorkspace = join(probeRoot, "workspace");
+  const sentinel = join(probeRoot, "outside-sentinel");
+  await mkdir(probeWorkspace);
+  await writeFile(sentinel, "unchanged", "utf8");
+  try {
+    const args = buildSafeDockerArgs({
+      cwd: probeWorkspace,
+      interactive: false,
+      piArgs: [],
+      identity: null,
+    });
+    const imageIndex = args.indexOf(IMAGE_NAME);
+    args.splice(imageIndex, 0, "--entrypoint", "sh");
+    args.push(
+      "-c",
+      [
+        "touch /workspace/inside-probe",
+        "test ! -e /workspace/../outside-sentinel",
+        "test -f /opt/mgyoo-pi-harness/agent-template/extensions/workspace-guard/index.ts",
+      ].join(" && "),
+    );
+    const boundary = await captureCheck(
       "safe-boundary",
-      {
-        command: "docker",
-        args: [
-          "run",
-          "--rm",
-          "--entrypoint",
-          "sh",
-          IMAGE_NAME,
-          "-c",
-          "touch /tmp/mgyoo-boundary && test ! -e /host-root",
-        ],
-      },
+      { command: "docker", args },
       deps,
       "Rebuild the safe image and verify Docker mount settings.",
       "Safe container boundary probe passed",
-    ),
-  );
+    );
+    const sentinelContents = await readFile(sentinel, "utf8");
+    results.push(
+      sentinelContents === "unchanged"
+        ? boundary
+        : {
+            id: "safe-boundary",
+            status: "fail",
+            summary: "Adjacent host sentinel changed during boundary probe",
+            remedy: "Stop using safe mode and inspect Docker mount settings.",
+          },
+    );
+  } finally {
+    await rm(probeRoot, { recursive: true, force: true });
+  }
   return results;
 }
 

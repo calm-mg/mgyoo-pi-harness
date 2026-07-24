@@ -45,12 +45,11 @@ backup_dir="$state_dir/backups/$timestamp"
 stage_dir="$state_dir/stage-$timestamp"
 mkdir -p "$backup_dir" "$stage_dir"
 
+node "$repo_dir/scripts/render-wrappers.mjs" posix "$repo_dir" "$stage_dir"
 for name in pi pi-yolo pi-login pi-doctor pi-update; do
   if [ -e "$bin_dir/$name" ]; then
     cp "$bin_dir/$name" "$backup_dir/$name"
   fi
-  sed "s|__REPOSITORY_ROOT__|$repo_dir|g" \
-    "$repo_dir/scripts/templates/$name" >"$stage_dir/$name"
   chmod 0755 "$stage_dir/$name"
   mv "$stage_dir/$name" "$bin_dir/$name"
 done
@@ -63,21 +62,18 @@ done
 cp "$repo_dir/config/settings.yolo.json" "$agent_dir/settings.json"
 cp "$repo_dir/config/AGENTS.md" "$agent_dir/APPEND_SYSTEM.md"
 
-cat >"$state_dir/install-manifest.json" <<EOF
-{
-  "repositoryRoot": "$repo_dir",
-  "binDir": "$bin_dir",
-  "agentDir": "$agent_dir",
-  "wrappers": [
-    "$bin_dir/pi",
-    "$bin_dir/pi-yolo",
-    "$bin_dir/pi-login",
-    "$bin_dir/pi-doctor",
-    "$bin_dir/pi-update"
-  ],
-  "backupDir": "$backup_dir"
-}
-EOF
+node -e '
+  const fs = require("node:fs");
+  const [file, repositoryRoot, binDir, agentDir, backupDir] = process.argv.slice(1);
+  const names = ["pi", "pi-yolo", "pi-login", "pi-doctor", "pi-update"];
+  fs.writeFileSync(file, JSON.stringify({
+    repositoryRoot,
+    binDir,
+    agentDir,
+    wrappers: names.map((name) => `${binDir}/${name}`),
+    backupDir
+  }, null, 2) + "\n");
+' "$state_dir/install-manifest.json" "$repo_dir" "$bin_dir" "$agent_dir" "$backup_dir"
 
 rmdir "$stage_dir"
 printf 'Installed mgyoo Pi Harness.\n'

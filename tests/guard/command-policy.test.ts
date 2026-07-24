@@ -9,6 +9,9 @@ describe("classifyCommand", () => {
     ["diskpart", "system-administration"],
     ["systemctl stop sshd", "system-administration"],
     ["Remove-Item -Recurse -Force build", "recursive-delete"],
+    ["cat .env", "secret-access"],
+    ["cp id_rsa copied-key", "secret-access"],
+    ["Get-Content client.pem", "secret-access"],
   ])("blocks %s", (command, rule) => {
     expect(classifyCommand(command)).toMatchObject({ allowed: false, rule });
   });

@@ -60,16 +60,18 @@ $backupDir = Join-Path $stateDir "backups\$timestamp"
 $stageDir = Join-Path $stateDir "stage-$timestamp"
 New-Item -ItemType Directory -Force -Path $backupDir, $stageDir | Out-Null
 
+& node (Join-Path $repositoryRoot "scripts\render-wrappers.mjs") `
+    windows $repositoryRoot $stageDir
+if ($LASTEXITCODE -ne 0) { throw "Wrapper rendering failed." }
 foreach ($name in @("pi", "pi-yolo", "pi-login", "pi-doctor", "pi-update")) {
-    $destination = Join-Path $binDir "$name.cmd"
-    if (Test-Path -LiteralPath $destination) {
-        Copy-Item -LiteralPath $destination -Destination $backupDir
+    foreach ($extension in @("cmd", "ps1")) {
+        $destination = Join-Path $binDir "$name.$extension"
+        if (Test-Path -LiteralPath $destination) {
+            Copy-Item -LiteralPath $destination -Destination $backupDir
+        }
+        $staged = Join-Path $stageDir "$name.$extension"
+        Move-Item -LiteralPath $staged -Destination $destination -Force
     }
-    $template = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot "scripts\templates\$name.cmd")
-    $rendered = $template.Replace("__REPOSITORY_ROOT__", $repositoryRoot)
-    $staged = Join-Path $stageDir "$name.cmd"
-    Set-Content -LiteralPath $staged -Value $rendered -Encoding Ascii
-    Move-Item -LiteralPath $staged -Destination $destination -Force
 }
 
 foreach ($managed in @("settings.json", "APPEND_SYSTEM.md")) {
@@ -92,7 +94,12 @@ $manifest = [ordered]@{
         (Join-Path $binDir "pi-yolo.cmd"),
         (Join-Path $binDir "pi-login.cmd"),
         (Join-Path $binDir "pi-doctor.cmd"),
-        (Join-Path $binDir "pi-update.cmd")
+        (Join-Path $binDir "pi-update.cmd"),
+        (Join-Path $binDir "pi.ps1"),
+        (Join-Path $binDir "pi-yolo.ps1"),
+        (Join-Path $binDir "pi-login.ps1"),
+        (Join-Path $binDir "pi-doctor.ps1"),
+        (Join-Path $binDir "pi-update.ps1")
     )
     backupDir = $backupDir
 }

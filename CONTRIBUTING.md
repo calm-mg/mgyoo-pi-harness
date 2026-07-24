@@ -1,6 +1,6 @@
 # Contributing
 
-문서 기준일: 2026-07-24  
+문서 기준일: 2026-07-24
 Pi 공식 문서: https://pi.dev/docs/latest
 
 1. 변경 범위를 작게 유지합니다.

@@ -60,6 +60,24 @@ describe("classifyPath", () => {
     });
   });
 
+  it("blocks a harmless-looking link that resolves to a protected name", async () => {
+    const workspace = await mkdtemp(join(tmpdir(), "mgyoo-workspace-"));
+    const protectedDirectory = join(workspace, ".env");
+    await mkdir(protectedDirectory);
+    await symlink(
+      protectedDirectory,
+      join(workspace, "notes"),
+      process.platform === "win32" ? "junction" : "dir",
+    );
+
+    await expect(
+      classifyPath({ workspace, candidate: "notes" }),
+    ).resolves.toEqual({
+      allowed: false,
+      reason: "Secret files are protected",
+    });
+  });
+
   it.each([".env", ".env.local", "id_rsa", "client.pem", "private.key"])(
     "blocks secret path %s",
     async (candidate) => {

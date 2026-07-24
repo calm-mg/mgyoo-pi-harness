@@ -90,4 +90,26 @@ describe("collectDoctorResults", () => {
     expect(image?.summary).toBe("Pinned safe image is present");
     expect(JSON.stringify(results)).not.toContain("hidden-value");
   });
+
+  it("probes the production workspace and state mounts", async () => {
+    const requests: RunRequest[] = [];
+    const deps = await createDeps(async (request) => {
+      requests.push(request);
+      return { code: 0, stdout: "ok", stderr: "" };
+    });
+
+    await collectDoctorResults(deps);
+
+    const boundary = requests.find(
+      (request) =>
+        request.command === "docker" &&
+        request.args.includes("--entrypoint") &&
+        request.args.includes("sh"),
+    );
+    const rendered = boundary?.args.join(" ") ?? "";
+    expect(rendered).toContain("target=/workspace");
+    expect(rendered).toContain("target=/pi-agent");
+    expect(rendered).toContain("outside-sentinel");
+    expect(rendered).toContain("workspace-guard/index.ts");
+  });
 });

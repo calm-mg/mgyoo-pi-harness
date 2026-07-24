@@ -1,6 +1,6 @@
 # Security Policy
 
-문서 기준일: 2026-07-24  
+문서 기준일: 2026-07-24
 Pi 공식 보안 문서: https://pi.dev/docs/latest/security
 
 ## 신고

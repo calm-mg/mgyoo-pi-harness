@@ -1,6 +1,6 @@
 # 모델과 로그인
 
-문서 기준일: 2026-07-24  
+문서 기준일: 2026-07-24
 공식 문서: https://pi.dev/docs/latest
 
 ## provider와 model

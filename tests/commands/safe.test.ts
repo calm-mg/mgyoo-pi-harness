@@ -12,11 +12,20 @@ describe("buildSafeDockerArgs", () => {
       cwd: "/work/app",
       interactive: true,
       piArgs: ["--model", "openai/example"],
+      identity: { uid: 1000, gid: 1001 },
     });
 
     expect(args).toContain("type=bind,source=/work/app,target=/workspace");
     expect(args).toContain(
-      "type=volume,source=mgyoo-pi-safe-agent,target=/root/.pi/agent",
+      "type=volume,source=mgyoo-pi-safe-agent,target=/pi-agent",
+    );
+    expect(args).toEqual(
+      expect.arrayContaining([
+        "--env",
+        "MGYOO_HOST_UID=1000",
+        "--env",
+        "MGYOO_HOST_GID=1001",
+      ]),
     );
     expect(args.join(" ")).not.toContain("/var/run/docker.sock");
     expect(args.join(" ")).not.toContain("target=/root,");
@@ -27,6 +36,7 @@ describe("buildSafeDockerArgs", () => {
       cwd: String.raw`D:\work\app`,
       interactive: false,
       piArgs: [],
+      identity: null,
     });
 
     expect(args).toContain(

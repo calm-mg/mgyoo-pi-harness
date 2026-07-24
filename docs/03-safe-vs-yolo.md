@@ -1,6 +1,6 @@
 # SAFE와 YOLO
 
-문서 기준일: 2026-07-24  
+문서 기준일: 2026-07-24
 공식 보안 문서: https://pi.dev/docs/latest/security
 
 ## 차이
@@ -19,6 +19,10 @@
 Pi에는 내장 filesystem sandbox가 없습니다. 확장 프로그램은 `tool_call`을 검사할 수 있지만 복잡한 셸 동작을 완전한 보안 경계로 만들 수 없습니다. SAFE 모드는 현재 프로젝트만 Docker에 bind mount하여 호스트의 다른 경로를 보이지 않게 합니다.
 
 workspace guard는 추가 방어입니다. 경로 탈출, `.env`, 개인키, 재귀 강제 삭제, 권한 상승 명령을 조기에 차단하고 이유를 알려줍니다.
+
+guard는 built-in 파일 도구에서 심볼릭 링크를 정규화한 뒤 비밀파일 이름을 다시 검사합니다. shell 명령에서도 `.env`, SSH 키, `*.pem`, `*.key` 같은 대표 패턴을 차단합니다. 다만 이름을 동적으로 조립하는 임의 프로그램까지 완전 분석하는 보안 경계는 아니므로, 실제 경계는 현재 프로젝트만 mount하는 Docker입니다.
+
+Linux에서는 컨테이너 프로세스를 실행 사용자의 UID/GID로 낮춥니다. 따라서 SAFE 모드가 프로젝트에 만든 파일이 root 소유로 남지 않습니다. Windows와 macOS의 Docker Desktop에서는 해당 플랫폼의 bind-mount 권한 변환을 사용합니다.
 
 ## project trust는 sandbox가 아니다
 

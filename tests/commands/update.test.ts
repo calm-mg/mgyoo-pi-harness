@@ -6,8 +6,10 @@ import type {
   RunRequest,
 } from "../../src/process.js";
 
-function createHarness(statusOutput = "") {
+function createHarness(statusOutput = "", failCommand = "") {
   const calls: RunRequest[] = [];
+  let failureUsed = false;
+  let stderr = "";
   const runner: ProcessRunner = {
     async capture(request): Promise<CaptureResult> {
       calls.push(request);
@@ -20,10 +22,18 @@ function createHarness(statusOutput = "") {
       if (request.args.join(" ") === "remote get-url origin") {
         return { code: 0, stdout: "https://github.com/example/repo\n", stderr: "" };
       }
+      if (request.args.join(" ") === "rev-parse HEAD") {
+        return { code: 0, stdout: "abc123\n", stderr: "" };
+      }
       return { code: 0, stdout: "", stderr: "" };
     },
     async run(request) {
       calls.push(request);
+      const rendered = `${request.command} ${request.args.join(" ")}`;
+      if (!failureUsed && failCommand && rendered.includes(failCommand)) {
+        failureUsed = true;
+        return 17;
+      }
       return 0;
     },
   };
@@ -32,13 +42,16 @@ function createHarness(statusOutput = "") {
     deps: {
       runner,
       stdout: { write: () => true },
-      stderr: { write: () => true },
+      stderr: { write: (text: string) => ((stderr += text), true) },
       cwd: process.cwd(),
       paths: {
         repositoryRoot: process.cwd(),
         hostPiExecutable: "pi-cli.js",
         hostAgentDir: "agent",
       },
+    },
+    get stderr() {
+      return stderr;
     },
   };
 }
@@ -65,12 +78,25 @@ describe("runUpdate", () => {
         "git status --porcelain",
         "git branch --show-current",
         "git remote get-url origin",
+        "git rev-parse HEAD",
         "git pull --ff-only",
-        "npm ci --ignore-scripts",
-        "npm run check",
-        "npm run build",
-        "docker build -t mgyoo-pi-harness:0.82.0 -f container/Dockerfile .",
       ]),
     );
+  });
+
+  it("rolls back and reinstalls the previous revision when activation fails", async () => {
+    const harness = createHarness("", "install.");
+
+    expect(await runUpdate([], harness.deps, async () => 0)).toBe(17);
+
+    const rendered = harness.calls.map(
+      (call) => `${call.command} ${call.args.join(" ")}`,
+    );
+    expect(rendered).toContain("git reset --hard abc123");
+    expect(
+      rendered.filter((command) => command.includes("install.")).length,
+    ).toBe(2);
+    expect(harness.stderr).toContain("abc123");
+    expect(harness.stderr).toContain("복구");
   });
 });

@@ -1,6 +1,6 @@
 # 문제 해결
 
-문서 기준일: 2026-07-24  
+문서 기준일: 2026-07-24
 공식 문서: https://pi.dev/docs/latest
 
 먼저 실행합니다.
@@ -77,6 +77,8 @@ git remote -v
 ```
 
 사용자 변경을 임의 stash, reset, clean하지 않습니다.
+
+fast-forward 뒤 설치·검사·doctor가 실패하면 `pi-update`는 업데이트 전 커밋을 기록해 두었다가 그 커밋으로 되돌리고 이전 설치기를 다시 실행합니다. 자동 복구까지 실패하면 출력된 정확한 이전 커밋과 `git reset --hard <커밋>` 복구 명령을 확인하세요. 이 명령은 harness 저장소에서만, `git status --short`가 비어 있을 때 사용합니다.
 
 ## backup 복구
 

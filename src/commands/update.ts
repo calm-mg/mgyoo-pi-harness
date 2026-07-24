@@ -1,4 +1,4 @@
-import { IMAGE_NAME } from "../constants.js";
+import { join } from "node:path";
 import type { RunRequest } from "../process.js";
 import { runDoctor } from "./doctor.js";
 import type { CommandDeps } from "./types.js";
@@ -17,6 +17,51 @@ async function runSteps(
     if (code !== 0) return code;
   }
   return 0;
+}
+
+function installerRequest(repositoryRoot: string): RunRequest {
+  if (process.platform === "win32") {
+    return {
+      command: "powershell.exe",
+      args: [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        join(repositoryRoot, "install.ps1"),
+      ],
+      cwd: repositoryRoot,
+    };
+  }
+  return {
+    command: "sh",
+    args: [join(repositoryRoot, "install.sh")],
+    cwd: repositoryRoot,
+  };
+}
+
+async function restorePreviousRevision(
+  previousHead: string,
+  deps: CommandDeps,
+): Promise<void> {
+  const cwd = deps.paths.repositoryRoot;
+  deps.stderr.write(
+    `업데이트 활성화에 실패했습니다. 이전 커밋 ${previousHead} 복구를 시작합니다.\n`,
+  );
+  const resetCode = await deps.runner.run({
+    command: "git",
+    args: ["reset", "--hard", previousHead],
+    cwd,
+  });
+  const installCode =
+    resetCode === 0 ? await deps.runner.run(installerRequest(cwd)) : resetCode;
+  if (resetCode === 0 && installCode === 0) {
+    deps.stderr.write(`이전 커밋 ${previousHead} 복구가 완료되었습니다.\n`);
+    return;
+  }
+  deps.stderr.write(
+    `자동 복구에 실패했습니다. 저장소에서 다음 명령을 실행하세요: git reset --hard ${previousHead}\n`,
+  );
 }
 
 export async function runUpdate(
@@ -55,27 +100,33 @@ export async function runUpdate(
   }
 
   const cwd = deps.paths.repositoryRoot;
-  const code = await runSteps(
-    [
-      { command: "git", args: ["pull", "--ff-only"], cwd },
-      { command: "npm", args: ["ci", "--ignore-scripts"], cwd },
-      { command: "npm", args: ["run", "check"], cwd },
-      { command: "npm", args: ["run", "build"], cwd },
-      {
-        command: "docker",
-        args: [
-          "build",
-          "-t",
-          IMAGE_NAME,
-          "-f",
-          "container/Dockerfile",
-          ".",
-        ],
-        cwd,
-      },
-    ],
+  const previous = await deps.runner.capture({
+    command: "git",
+    args: ["rev-parse", "HEAD"],
+    cwd,
+  });
+  const previousHead = previous.stdout.trim();
+  if (previous.code !== 0 || !/^[0-9a-f]{6,64}$/i.test(previousHead)) {
+    deps.stderr.write("현재 Git 커밋을 확인할 수 없어 업데이트를 중단합니다.\n");
+    return 1;
+  }
+
+  const pullCode = await runSteps(
+    [{ command: "git", args: ["pull", "--ff-only"], cwd }],
     deps,
   );
-  if (code !== 0) return code;
-  return doctor([], deps);
+  if (pullCode !== 0) return pullCode;
+
+  const activationCode = await deps.runner.run(installerRequest(cwd));
+  if (activationCode !== 0) {
+    await restorePreviousRevision(previousHead, deps);
+    return activationCode;
+  }
+
+  const doctorCode = await doctor([], deps);
+  if (doctorCode !== 0) {
+    await restorePreviousRevision(previousHead, deps);
+    return doctorCode;
+  }
+  return 0;
 }
