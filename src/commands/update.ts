@@ -69,8 +69,22 @@ async function restorePreviousRevision(
     );
     return;
   }
+  if (worktreeCode === 0) {
+    const installer =
+      process.platform === "win32"
+        ? `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${join(recoveryRoot, "install.ps1")}"`
+        : `sh "${join(recoveryRoot, "install.sh")}"`;
+    deps.stderr.write(
+      `복구 worktree 안의 설치기 실행에 실패했습니다. 현재 브랜치는 그대로 두고 다음 명령을 다시 실행하세요: ${installer}\n`,
+    );
+    return;
+  }
+  const fallbackRoot = join(
+    tmpdir(),
+    `mgyoo-pi-recovery-${randomUUID()}`,
+  );
   deps.stderr.write(
-    `자동 복구에 실패했습니다. 현재 브랜치를 변경하지 말고 다음 명령으로 별도 복구본을 만드세요: git worktree add --detach "${recoveryRoot}" ${previousHead}\n`,
+    `복구 worktree 생성에 실패했습니다. 현재 브랜치를 변경하지 말고 다음 명령으로 별도 복구본을 만드세요: git worktree add --detach "${fallbackRoot}" ${previousHead}\n`,
   );
 }
 

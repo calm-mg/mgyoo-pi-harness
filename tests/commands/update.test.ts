@@ -6,7 +6,11 @@ import type {
   RunRequest,
 } from "../../src/process.js";
 
-function createHarness(statusOutput = "", failCommand = "") {
+function createHarness(
+  statusOutput = "",
+  failCommand = "",
+  failEveryMatch = false,
+) {
   const calls: RunRequest[] = [];
   let failureUsed = false;
   let stderr = "";
@@ -30,7 +34,11 @@ function createHarness(statusOutput = "", failCommand = "") {
     async run(request) {
       calls.push(request);
       const rendered = `${request.command} ${request.args.join(" ")}`;
-      if (!failureUsed && failCommand && rendered.includes(failCommand)) {
+      if (
+        failCommand &&
+        rendered.includes(failCommand) &&
+        (failEveryMatch || !failureUsed)
+      ) {
         failureUsed = true;
         return 17;
       }
@@ -104,5 +112,14 @@ describe("runUpdate", () => {
     expect(harness.stderr).toContain("abc123");
     expect(harness.stderr).toContain("worktree");
     expect(harness.stderr).toContain("복구");
+  });
+
+  it("recommends rerunning an existing recovery installer when reactivation fails", async () => {
+    const harness = createHarness("", "install.", true);
+
+    expect(await runUpdate([], harness.deps, async () => 0)).toBe(17);
+
+    expect(harness.stderr).toContain("복구 worktree 안의 설치기");
+    expect(harness.stderr).not.toContain("git worktree add");
   });
 });
