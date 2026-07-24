@@ -112,7 +112,15 @@ export async function scanFiles(root, relativePaths) {
 function repositoryFiles(root) {
   const result = spawnSync(
     "git",
-    ["ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+    [
+      "-c",
+      `safe.directory=${root}`,
+      "ls-files",
+      "--cached",
+      "--others",
+      "--exclude-standard",
+      "-z",
+    ],
     {
       cwd: root,
       encoding: "utf8",
