@@ -8,9 +8,10 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "check:secrets": "node scripts/check-secrets.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "check": "npm run typecheck && npm test"
+    "check": "npm run check:secrets && npm run typecheck && npm test"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "0.82.0"
