@@ -13,9 +13,9 @@
     "check": "npm run check:secrets && npm run typecheck && npm test"
   },
   "devDependencies": {
-    "@earendil-works/pi-coding-agent": "0.82.0",
-    "@types/node": "24.0.15",
-    "typescript": "5.8.3",
-    "vitest": "3.2.7"
+    "@earendil-works/pi-coding-agent": "1.5.2",
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
   }
 }
