@@ -1,0 +1,3 @@
+# The harness, not the interactive agent, owns the executable version.
+update:
+  auto: false

@@ -1,0 +1,9 @@
+{
+  "name": "mgyoo-harness-resources",
+  "private": true,
+  "type": "module",
+  "pi": {
+    "extensions": ["./protect-env.js"],
+    "skills": ["./skills"]
+  }
+}

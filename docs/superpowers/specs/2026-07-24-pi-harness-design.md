@@ -1,5 +1,7 @@
 # mgyoo Pi Harness 설계
 
+> v1 설계 기록입니다. 현재 설치·사용법은 [README](../../../README.md)를 따르세요.
+
 - 작성일: 2026-07-24
 - 대상 저장소: `calm-mg/mgyoo-pi-harness`
 - 공개 범위: Public

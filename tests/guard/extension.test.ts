@@ -1,6 +1,7 @@
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import registerGuard from "../../extensions/workspace-guard/index.js";
 
@@ -49,6 +50,16 @@ describe("workspace guard extension", () => {
       block: true,
       reason: "Secret files are protected",
     });
+  });
+
+  it("allows just the packaged review skill for read, not edit or adjacent files", async () => {
+    const skill = fileURLToPath(new URL("../../config/skills/harness-review/SKILL.md", import.meta.url));
+    const workspace = await mkdtemp(join(tmpdir(), "mgyoo-extension-"));
+    const call = createHarness().handlers.get("tool_call")!;
+    expect(await call({ toolName: "read", input: { path: skill } }, { cwd: workspace })).toBeUndefined();
+    for (const [toolName, path] of [["write", skill], ["read", `${skill}.copy`]]) {
+      expect(await call({ toolName, input: { path } }, { cwd: workspace })).toMatchObject({ block: true });
+    }
   });
 
   it("allows a write below cwd", async () => {

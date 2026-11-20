@@ -1,5 +1,7 @@
 # mgyoo Pi Harness v1 Implementation Plan
 
+> Historical v1 plan, not current installation or development instructions. See the [README](../../../README.md).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a public, cross-platform Pi harness whose default `pi` command runs in a Docker workspace boundary and whose explicit `pi-yolo` command runs Pi with host-user permissions.

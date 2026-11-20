@@ -26,17 +26,20 @@ jobs:
           cache: npm
       - name: Install exact dependencies
         run: npm ci --ignore-scripts
-      - name: Check source and build
-        run: npm run check && npm run build
-      - name: Exercise POSIX installer plan
+      - name: Check source and test
+        run: npm run check
+      - name: Run bootstrap and CLI
+        shell: bash
         if: runner.os != 'Windows'
-        run: MGYOO_PI_DRY_RUN=1 sh ./install.sh
-      - name: Exercise Windows installer plan
-        if: runner.os == 'Windows'
-        shell: pwsh
         run: |
-          $env:MGYOO_PI_DRY_RUN = "1"
+          sh install.sh
+          "$HOME/.local/bin/harness" setup pi --dry-run
+      - name: Run Windows bootstrap and CLI
+        shell: pwsh
+        if: runner.os == 'Windows'
+        run: |
           ./install.ps1
+          & "$env:LOCALAPPDATA\mgyoo-harness\bin\harness.cmd" setup pi --dry-run
 
   container-boundary:
     name: Container boundary
@@ -44,5 +47,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
       - name: Verify safe-mode host boundary
         run: sh ./tests/container/smoke.sh
