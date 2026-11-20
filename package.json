@@ -1,22 +1,19 @@
 {
-  "name": "mgyoo-pi-harness",
-  "version": "0.1.0",
+  "name": "mgyoo-harness",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "engines": {
     "node": ">=24"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
     "check:secrets": "node scripts/check-secrets.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "check": "npm run check:secrets && npm run typecheck && npm test"
   },
-  "dependencies": {
-    "@earendil-works/pi-coding-agent": "0.82.0"
-  },
   "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.82.0",
     "@types/node": "24.0.15",
     "typescript": "5.8.3",
     "vitest": "3.2.7"
