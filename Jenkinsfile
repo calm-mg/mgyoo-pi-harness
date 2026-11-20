@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'linux-arm64-docker' }
+    agent { label 'linux-arm64' }
     options { timeout(time: 30, unit: 'MINUTES') }
 
     stages {
