@@ -70,7 +70,7 @@ harness run omp --host
 # /harness-status 확인 후 종료
 ```
 
-**무엇이 고정되는가:** [카탈로그](lib/catalog.mjs)의 Pi `@earendil-works/pi-coding-agent@0.82.0`을 npm에서 설치합니다(install scripts 비활성, 도구 버전 고정이지 전이 의존성 전체 lock은 아님). OMP `19.0.1`은 공식 `build.stencil.so` 바이너리와 [플랫폼별 SHA-256](lib/omp-release.mjs)을 검증합니다. PATH의 OMP도 같은 바이트일 때만 재사용합니다. 호스트 OMP 자체에는 npm/Bun/Docker가 필요 없습니다. macOS·Linux·Windows용 x64/arm64 해시가 있으며 musl Linux에는 `libstdc++`와 `libgcc`가 필요합니다. 도구가 지원하는 플랫폼과 이 저장소에서 실측한 환경은 다릅니다([검증 범위](CONTRIBUTING.md)).
+**무엇이 고정되는가:** [카탈로그](lib/catalog.mjs)의 Pi `@earendil-works/pi-coding-agent@0.82.0`을 npm에서 설치합니다(install scripts 비활성). 배포 패키지에는 upstream `npm-shrinkwrap.json`이 들어 있고, 하네스 호스트 설치는 이 저장소의 개발용 lockfile을 사용하지 않습니다. OMP `19.0.1`은 공식 `build.stencil.so` 바이너리와 [플랫폼별 SHA-256](lib/omp-release.mjs)을 검증합니다. PATH의 OMP도 같은 바이트일 때만 재사용합니다. 호스트 OMP 자체에는 npm/Bun/Docker가 필요 없습니다. macOS·Linux·Windows용 x64/arm64 해시가 있으며 musl Linux에는 `libstdc++`와 `libgcc`가 필요합니다. 도구가 지원하는 플랫폼과 이 저장소에서 실측한 환경은 다릅니다([검증 범위](CONTRIBUTING.md)).
 
 컨테이너는 [digest 고정 Debian/Node 이미지](container/Dockerfile)에 bash·Git·ripgrep·인증서·util-linux 등을 설치합니다. 이미지/apt/npm/OMP 다운로드에 인터넷이 필요합니다. 개발용 TypeScript·Vitest 등은 [`package-lock.json`](package-lock.json) 대상이며 런처 설치 전 `npm ci`를 할 필요는 없습니다. `harness run pi --host -- --version`처럼 `--` 뒤에 도구 인수를 전달할 수 있습니다.
 

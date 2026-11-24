@@ -69,6 +69,8 @@ try {
   const example = join(repo, 'examples', 'mcp');
   mkdirSync(join(cwd, '.omp')); cpSync(join(example, 'diff-stat.mjs'), join(cwd, 'diff-stat.mjs'));
   cpSync(join(example, 'mcp.example.json'), join(cwd, '.omp', 'mcp.json'));
+  // OMP's default 250 ms discovery window may return before a cold stdio child is ready.
+  writeFileSync(join(cwd, '.omp', 'config.yml'), 'mcp:\n  startupTimeoutMs: 0\n');
   await status('omp', 'mcp__diffstat_count_changes');
   const call = { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'count_changes', arguments: { patch: '@@ -1 +1,2 @@\n-old\n+new\n+extra' } } };
   const reply = JSON.parse(run(process.execPath, ['--permission', './diff-stat.mjs'], { input: JSON.stringify(call) + '\n' }));
