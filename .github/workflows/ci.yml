@@ -28,18 +28,8 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Check source and test
         run: npm run check
-      - name: Run bootstrap and CLI
-        shell: bash
-        if: runner.os != 'Windows'
-        run: |
-          sh install.sh
-          "$HOME/.local/bin/harness" setup pi --dry-run
-      - name: Run Windows bootstrap and CLI
-        shell: pwsh
-        if: runner.os == 'Windows'
-        run: |
-          ./install.ps1
-          & "$env:LOCALAPPDATA\mgyoo-harness\bin\harness.cmd" setup pi --dry-run
+      - name: Verify isolated host installs, live commands and local MCP
+        run: node tests/install/host-smoke.mjs
 
   container-boundary:
     name: Container boundary (${{ matrix.os }})

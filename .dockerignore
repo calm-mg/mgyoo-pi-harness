@@ -1,4 +1,6 @@
 **
+!lib/catalog.mjs
+!lib/omp-release.mjs
 !container/Dockerfile
 !container/install-tool.sh
 !container/entrypoint.sh
