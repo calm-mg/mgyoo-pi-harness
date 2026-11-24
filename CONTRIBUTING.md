@@ -15,6 +15,8 @@ node tests/install/host-smoke.mjs
 
 스모크는 공백이 있는 임시 홈·프로젝트·PATH에 네이티브 설치기로 런처를 설치하고 두 `setup`을 반복합니다. 모델이나 기존 인증 대신 실제 RPC 세션에 `/harness-status`를 전송합니다. 공통 지침·리뷰 스킬, 기본 MCP 부재, 명시적으로 켠 로컬 MCP 도구 목록과 예제 입력의 결과, 중지한 프로필의 백업/복원, 기존 설정 보존과 런처 제거를 검사하고 임시 상태를 지웁니다. 인증·세션·개인 경로를 PR이나 로그에 복사하지 마세요.
 
+OMP는 같은 스모크에서 [`claude-work`](presets/claude-work.yml)도 검사합니다. 임시 프로필에 GPT 기본값과 `tiny`를 두고 두 번의 새 RPC 세션을 엽니다. `--config`를 붙이면 여덟 역할과 추론 접미사·활성 Opus/high를, 빼면 원래 GPT/low를 확인합니다. 두 경우 모두 `tiny`와 전역 `config.yml` 바이트가 유지되어야 합니다. 카탈로그는 키 없는 루프백 주소로 설정하고 로컬 슬래시 명령만 실행합니다. 공급자 권한이나 모델 응답을 검사하는 테스트가 아닙니다.
+
 | CI 경로 | 확인하는 범위 |
 |---|---|
 | `ubuntu-latest`, `macos-latest`, `windows-latest` | Node 24, 계약 테스트 + 위 호스트 스모크. Windows는 네이티브 PowerShell 설치기와 CMD 런처 |

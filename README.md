@@ -74,6 +74,49 @@ harness run omp --host
 
 컨테이너는 [digest 고정 Debian/Node 이미지](container/Dockerfile)에 bash·Git·ripgrep·인증서·util-linux 등을 설치합니다. 이미지/apt/npm/OMP 다운로드에 인터넷이 필요합니다. 개발용 TypeScript·Vitest 등은 [`package-lock.json`](package-lock.json) 대상이며 런처 설치 전 `npm ci`를 할 필요는 없습니다. `harness run pi --host -- --version`처럼 `--` 뒤에 도구 인수를 전달할 수 있습니다.
 
+## Claude 작업용 OMP 한 번만 실행하기
+
+Mac·Windows·Oracle Linux 호스트에 **이미 설치된 `omp`**를 대상으로 합니다. [`presets/claude-work.yml`](presets/claude-work.yml)은 계정이나 프로필이 아니라, `--config`가 지정된 프로세스에만 적용하는 `config.yml` 형식의 오버레이입니다. `omp config path`가 출력하는 것은 **디렉터리**입니다. 그 안의 `config.yml`에 복사하거나 병합하지 마세요. 하네스 설치·로그인·기본 GPT 모델 변경은 필요 없습니다.
+
+**macOS(zsh) / Oracle Linux(bash):** 각 호스트의 하네스 체크아웃 루트에서 처음 두 줄을 실행하세요. Oracle에 SSH로 접속했다면 Mac 경로가 아닌 **Oracle의 체크아웃**을 사용합니다.
+
+```sh
+claude_work_preset="$(pwd -P)/presets/claude-work.yml"
+omp-claude-work() { omp --config "$claude_work_preset" "$@"; }
+# 이제 원하는 작업 프로젝트로 이동한 뒤, 아래 두 방법 중 하나로 실행
+omp --config "$claude_work_preset" --no-session
+# 또는: omp-claude-work --no-session
+```
+
+**Windows(PowerShell):** Windows 쪽 체크아웃 루트에서 경로와 단축 함수를 정합니다.
+
+```powershell
+$ClaudeWorkPreset = (Resolve-Path -LiteralPath '.\presets\claude-work.yml').Path
+function omp-claude-work { omp --config $ClaudeWorkPreset @args }
+# 원하는 작업 프로젝트에서
+omp --config $ClaudeWorkPreset --no-session
+# 또는: omp-claude-work --no-session
+```
+
+두 예제는 저장하지 않는 새 세션을 열므로 기존 GPT 대화를 이어 쓰지 않습니다. 새 대화를 저장하려면 자동 재개(`autoResume`)가 꺼져 있는지 확인한 뒤 `--no-session`만 빼세요. 원래 대화를 바꾸지 않으려면 `--continue`나 `--resume`은 붙이지 않습니다. 함수는 현재 셸에서만 유효하고 기존 `omp`를 가리지 않습니다.
+
+**확인·해제:** 질문을 보내지 말고 세션의 `/models` → Roles에서 아래 배정과 추론 강도를 확인한 뒤 Esc로 닫으세요. 선택·저장은 필요 없습니다. 활성 모델은 상태 줄에서도 확인하세요. 프리셋 세션을 종료하고 `omp --no-session`을 실행하면 원래 배정(예: GPT)을 봅니다. 보통 실행은 이전처럼 `omp`입니다. 함수까지 지우려면 zsh/bash는 `unset -f omp-claude-work; unset claude_work_preset`, PowerShell은 `Remove-Item Function:\omp-claude-work; Remove-Variable ClaudeWorkPreset`입니다.
+
+| 역할 | 모델 · 추론 강도 | 이 역할을 쓰는 작업 |
+|---|---|---|
+| `default`, `slow` | Opus 5.5 · high | 각각 새 주 대화의 기본값, `@slow`를 요청하는 심층 분석(예: 내장 reviewer). 어려운 질문이라고 주 대화가 자동 전환되지는 않습니다. |
+| `smol`, `vision`, `task` | Sonnet 5.5 · high | 각각 가벼운 작업(예: scout), 이미지 질문·판독(생성 아님), 일반 위임 작업. 에이전트별 모델 지정이 있으면 `task`보다 우선할 수 있습니다. |
+| `plan`, `advisor` | Fable 5.2 · high | 각각 계획 모드, 별도로 켠 advisor의 검토·조언. `todo`나 역할 배정만으로 계획 모드 또는 advisor가 시작되지는 않습니다. |
+| `commit` | Haiku 5.5 · medium | OMP의 커밋 메시지 생성용 모델 선택. 일반 `git commit`에는 영향이 없습니다. |
+
+[`/vibe`](https://github.com/can1357/oh-my-pi/blob/v19.1.0/docs/vibe-mode.md)는 따로 켜는 작업자 모드입니다. 기본 `fast` 작업자는 `sonic` → `smol`, `good` 작업자는 `task` → `task`이므로 둘 다 이 프리셋에서는 Sonnet입니다(개별 작업자 재정의가 없을 때). [advisor](https://github.com/can1357/oh-my-pi/blob/v19.1.0/docs/advisor-watchdog.md)는 작업자가 아니라 주 대화를 검토하는 별도 기능입니다. 프리셋은 어느 쪽도 켜지 않습니다.
+
+나머지 `auto` 역할은 키 자체를 생략했습니다. `tiny`(제목 등 경량 작업), `memory`(기억 처리), `image`(이미지 생성), `web`(검색), `speech`/`dictation`(음성 합성/인식), `judge`(판정)는 각 기기의 기존 배정이나 OMP 자동 선택을 따릅니다. `retry.fallbackChains`도 지정하지 않습니다. 화면만으로 실패 시 대체 모델 순서를 알 수 없기 때문입니다.
+
+**버전과 접근 경계:** 하네스는 `19.0.1` 고정이고 호스트의 `omp --version`은 다를 수 있습니다. Linux ARM64에서 `19.0.1`과 `19.1.0` 모두 실제 `--config` 세션에서 같은 여덟 배정·강도가 로드됐습니다. 두 버전 모두 `omp config get` 자체에는 `--config`를 붙일 수 없으므로 적용 확인은 실행 중인 세션에서 합니다. 두 로컬 카탈로그에서 네 모델 ID와 지정 강도를 확인했지만, 계정 권한·할당량·서버 응답은 검증하지 않았습니다. `omp models anthropic`은 그 호스트에서 사용 가능한 목록을 보며, 인증이 없으면 비어 있을 수 있습니다.
+
+`harness run omp --host -- --config <프리셋 절대경로>`는 개인 OMP가 아니라 **이미 준비된 하네스 전용 홈/프로필**에서 고정 버전을 실행합니다. 기본 `harness run omp`는 Docker에서 현재 작업 폴더(`/workspace`)와 전용 상태 볼륨만 마운트합니다. 다른 프로젝트 밖에 있는 체크아웃·호스트 절대경로·개인 인증은 보이지 않습니다. 이 프리셋을 위해 홈이나 체크아웃을 추가 마운트하지 마세요.
+
 ## 내가 관리하는 설정
 
 - **항상 적용할 지침:** [`config/AGENTS.md`](config/AGENTS.md). 사용자 변경 보존, 비밀정보 처리처럼 프로젝트나 도구가 달라도 지킬 규칙을 둡니다.
