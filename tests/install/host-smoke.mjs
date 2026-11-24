@@ -28,22 +28,54 @@ const launcher = win ? [env.ComSpec || 'cmd.exe', '/d', '/c', 'harness'] : [join
 const harness = (...args) => run(launcher[0], [...launcher.slice(1), ...args]);
 
 // Keep stdin open through dispatch: EOF before the response races RPC startup.
-async function status(tool, expectedMcp) {
-  const args = ['run', tool, '--host', '--', '--mode', 'rpc', '--no-session', '--model', 'openai/gpt-5.2'];
+async function rpcNotice(tool, command, prefix, extraArgs) {
+  const args = ['run', tool, '--host', '--', '--mode', 'rpc', '--no-session', ...extraArgs];
   if (tool === 'omp') args.push('--offline', '--no-title');
   const child = spawn(launcher[0], [...launcher.slice(1), ...args], { ...options, timeout: 90_000, stdio: ['pipe', 'pipe', 'inherit'] });
   const closed = new Promise((resolve, reject) => { child.once('error', reject); child.once('close', resolve); });
   const lines = createInterface({ input: child.stdout });
-  child.stdin.write(JSON.stringify({ type: 'prompt', id: 'status', message: '/harness-status' }) + '\n');
+  child.stdin.write(JSON.stringify({ type: 'prompt', id: 'probe', message: command }) + '\n');
   let message;
   for await (const line of lines) {
     const event = JSON.parse(line);
-    if (event.method === 'notify' && event.message.startsWith('AGENTS.md:')) message = event.message;
-    if (event.id === 'status' && event.type === 'response') child.stdin.end();
+    if (event.method === 'notify' && event.message.startsWith(prefix)) message = event.message;
+    if (event.id === 'probe' && event.type === 'response') child.stdin.end();
   }
   assert.equal(await closed, 0);
+  return message;
+}
+async function status(tool, expectedMcp) {
+  const message = await rpcNotice(tool, '/harness-status', 'AGENTS.md:', ['--model', 'openai/gpt-5.2']);
   assert.equal(message, `AGENTS.md: OK\nharness-review: OK\nMCP: ${expectedMcp}`);
   console.log(`${tool}: ${message.replaceAll('\n', ' · ')}`);
+}
+
+async function checkClaudeWork() {
+  const agent = join(state, 'host', 'omp', '.omp', 'profiles', 'mgyoo', 'agent');
+  const config = join(agent, 'config.yml');
+  const base = { default: 'openai/gpt-5.2:low', tiny: 'openai/gpt-5-mini:low' };
+  const original = JSON.stringify({ modelRoles: base }) + '\n';
+  writeFileSync(config, original);
+  // Expose bundled rows without accounts or keys. No model replies: only a local slash command runs.
+  writeFileSync(join(agent, 'models.yml'), JSON.stringify({ providers: Object.fromEntries(
+    ['anthropic', 'openai'].map(p => [p, { auth: 'none', baseUrl: 'http://127.0.0.1:1' }])) }));
+  const probe = join(temp, 'read-roles.mjs');
+  writeFileSync(probe, `export default pi => pi.registerCommand('read-roles', {
+    handler: async (_, ctx) => ctx.ui.notify(JSON.stringify({
+      roles: pi.pi.settings.getModelRoles(), active: ctx.model.provider + '/' + ctx.model.id, effort: pi.getThinkingLevel()
+    }))
+  });`);
+  const opus = 'anthropic/claude-opus-5-5:high', sonnet = 'anthropic/claude-sonnet-5-5:high';
+  const fable = 'anthropic/claude-fable-5-2:high';
+  const work = { ...base, default: opus, slow: opus, smol: sonnet, vision: sonnet, task: sonnet,
+    plan: fable, advisor: fable, commit: 'anthropic/claude-haiku-5-5:medium' };
+  for (const [roles, flags] of [[work, ['--config', join(repo, 'presets', 'claude-work.yml')]], [base, []]]) {
+    const result = JSON.parse(await rpcNotice('omp', '/read-roles', '{"roles":', ['-e', probe, ...flags]));
+    const [active, effort] = roles.default.split(':');
+    assert.deepEqual(result, { roles, active, effort });
+    assert.equal(readFileSync(config, 'utf8'), original);
+  }
+  console.log('OMP: Claude roles and effort on, GPT default off, inherited tiny and unchanged config.yml');
 }
 
 try {
@@ -55,6 +87,7 @@ try {
     harness('setup', tool, '--dry-run'); harness('setup', tool); harness('setup', tool);
     harness('doctor', tool, '--host'); await status(tool, '없음');
   }
+  await checkClaudeWork();
   // Checkpoint by moving (not copying) the stopped profiles: auth stays private.
   const profiles = join(state, 'host'), snapshot = join(state, 'host.before');
   const settings = join('pi', 'agent', 'settings.json');
