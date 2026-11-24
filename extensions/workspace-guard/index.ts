@@ -23,9 +23,11 @@ export default function registerGuard(pi: ExtensionAPI): void {
     ctx.ui.setStatus("mgyoo-safe", "SAFE · workspace only");
   });
 
+  // Pi 1.x also emits tool_call for calls nested in codemode scripts.
   pi.on("tool_call", async (event, ctx) => {
     if (isToolCallEventType("read", event) && publicSkills.has(event.input.path)) return;
-    if (isToolCallEventType("bash", event)) {
+    // The powershell tool exists only in native Windows Pi; keep the same policy if one appears.
+    if (isToolCallEventType("bash", event) || isToolCallEventType("powershell", event)) {
       const decision = classifyCommand(event.input.command);
       if (!decision.allowed) {
         return { block: true, reason: decision.reason };

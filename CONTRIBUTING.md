@@ -24,3 +24,5 @@ OMP는 같은 스모크에서 [`claude-work`](presets/claude-work.yml)도 검사
 | 미측정 | WSL2 자체, macOS/Windows Docker Desktop, musl 및 모든 OS/CPU 조합, GUI 설치·관리자 정책, 공급자 로그인과 유료 모델 응답 |
 
 호스트 스모크 성공은 호스트 파일 접근 격리를 의미하지 않습니다. 컨테이너 경계를 변경했다면 Docker가 실행되는 Linux에서도 컨테이너 스모크를 실행하세요.
+
+**Pi 업데이트.** 기존 Dependabot이 `@earendil-works/*`를 별도 `pi` 그룹 PR로 올립니다. `package.json`의 정확한 버전이 호스트 설치·이미지·확장 타입의 유일한 Pi 버전이므로 따로 고칠 카탈로그는 없습니다. 같은 PR에서 README의 Pi 버전과 문서 링크를 맞추고(불일치 시 `tests/config/versions.test.mjs` 실패), upstream 변경 기록의 확장 API·내장 도구·셸 변경을 [`workspace-guard`](extensions/workspace-guard)와 대조한 뒤 위 CI가 모두 통과할 때 병합합니다. `@types/node`는 `engines`의 최소 Node 메이저에 맞춰 메이저 업데이트를 받지 않습니다.

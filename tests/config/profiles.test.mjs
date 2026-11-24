@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import protectEnv from '../../config/protect-env.js';
+import { PI_PACKAGE, TOOLS } from '../../lib/catalog.mjs';
 
 const original = fileURLToPath(new URL('../../', import.meta.url));
 let temp, home, root, profiles;
@@ -23,11 +24,12 @@ afterEach(async () => {
 });
 
 // A local npm package fixture with a versioned manifest; no real setup or network on CI.
-async function privatePi(version = '0.82.0') {
-  const pkg = join(home, 'runtimes/pi/0.82.0/node_modules/@earendil-works/pi-coding-agent');
-  await mkdir(join(pkg, 'dist'), { recursive: true });
-  await writeFile(join(pkg, 'package.json'), JSON.stringify({ name: '@earendil-works/pi-coding-agent', version }));
-  await writeFile(join(pkg, 'dist/cli.js'), 'console.log("0.82.0")\n');
+const pi = TOOLS.pi.version;
+const piPackage = () => join(home, 'runtimes/pi', pi, 'node_modules', PI_PACKAGE);
+async function privatePi(version = pi, bin = 'dist/bundle/cli.js') {
+  await mkdir(join(piPackage(), 'dist/bundle'), { recursive: true });
+  await writeFile(join(piPackage(), 'package.json'), JSON.stringify({ name: PI_PACKAGE, version, bin: { pi: bin } }));
+  await writeFile(join(piPackage(), 'dist/bundle/cli.js'), `console.log(${JSON.stringify(pi)})\n`);
 }
 
 describe('host setup', () => {
@@ -63,6 +65,7 @@ describe('host setup', () => {
     expect(launch.env.PI_CODING_AGENT_DIR).toBe(join(profile, 'agent'));
     expect(launch.env.PI_CODING_AGENT_SESSION_DIR).toBeUndefined();
     expect(launch.command).toBe(process.execPath);
+    expect(launch.args[0]).toBe(join(piPackage(), 'dist/bundle/cli.js'));
     expect(launch.args).toContain(app);
     expect(launch.args.some(arg => arg.includes('workspace-guard'))).toBe(false);
   });
@@ -114,9 +117,12 @@ describe('host setup', () => {
     expect(await readFile(existing, 'utf8')).toBe('mine');
     expect(await readdir(home)).toEqual(['host']);
     await rm(existing);
-    await privatePi('0.81.0');
-    await expect(profiles.setup('pi')).rejects.toThrow('0.82.0');
+    await privatePi('0.0.1');
+    await expect(profiles.setup('pi')).rejects.toThrow(pi);
     await expect(stat(existing)).rejects.toMatchObject({ code: 'ENOENT' });
+    await privatePi(pi, '../../../outside.js');
+    await writeFile(join(home, 'runtimes/pi', pi, 'outside.js'), '');
+    await expect(profiles.setup('pi')).rejects.toThrow('손상');
   });
 
   it('rejects redirects into user-owned directories', async () => {

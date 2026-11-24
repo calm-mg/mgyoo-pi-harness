@@ -6,8 +6,15 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     groups:
+      # A Pi release changes the deployed runtime; review it apart from dev tooling.
+      pi:
+        patterns: ["@earendil-works/*"]
       npm-dependencies:
         patterns: ["*"]
+    ignore:
+      # Node types follow package.json engines (the oldest supported Node major).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:

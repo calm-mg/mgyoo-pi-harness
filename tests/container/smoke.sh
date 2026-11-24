@@ -57,9 +57,10 @@ function probeSession(api, ctx) {
 EOF
 
 for tool in pi omp; do
+  expected=$(node -e 'import(require("node:url").pathToFileURL(process.argv[1])).then(m => process.stdout.write(m.TOOLS[process.argv[2]].version))' "$root/lib/catalog.mjs" "$tool")
   case "$tool" in
-    pi) expected=0.82.0; set -- ;;
-    omp) expected=19.0.1; set -- --offline --no-title ;;
+    pi) set -- ;;
+    omp) set -- --offline --no-title ;;
   esac
   version=$(node "$root/lib/cli.mjs" run "$tool" -- --version)
   [ "$version" = "$expected" ]
