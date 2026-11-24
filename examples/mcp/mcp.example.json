@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "diffstat": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["--permission", "./diff-stat.mjs"],
+      "instructions": false
+    }
+  }
+}

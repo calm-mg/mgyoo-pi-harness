@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "pi": {
-    "extensions": ["./protect-env.js"],
+    "extensions": ["./protect-env.js", "./status.js"],
     "skills": ["./skills"]
   }
 }

@@ -6,6 +6,7 @@ RUN apt-get update \
 
 ARG TOOL
 ARG VERSION
+COPY lib/catalog.mjs lib/omp-release.mjs /usr/local/lib/harness/
 COPY container/install-tool.sh /usr/local/lib/harness/install-tool.sh
 RUN sh /usr/local/lib/harness/install-tool.sh "$TOOL" "$VERSION"
 

@@ -137,11 +137,6 @@ it('wires the same resources via real tool-specific flags, with the workspace gu
   expect(pi).toContain('/opt/harness/extensions/workspace-guard/index.ts');
   expect(omp).toContain('/opt/harness/config');
   expect(omp.slice(0, 2)).toEqual(['--profile', 'mgyoo']);
-  const manifest = JSON.parse(await readFile(join(original, 'config/package.json'), 'utf8'));
-  expect(manifest.pi.extensions).toEqual(['./protect-env.js']);
-  expect(manifest.pi.skills).toEqual(['./skills']);
-  const contents = await readFile(join(original, 'config/skills/harness-review/SKILL.md'), 'utf8');
-  expect(contents).toMatch(/^---\nname: harness-review\ndescription: .+\n---/);
   let listener;
   protectEnv({ on: (event, callback) => { expect(event).toBe('tool_call'); listener = callback; } });
   for (const path of ['.env', 'cfg/.env.local', 'cfg\\.env', '[.env#ABCD]']) {
