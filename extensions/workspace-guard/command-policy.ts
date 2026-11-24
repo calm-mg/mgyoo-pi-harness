@@ -16,8 +16,9 @@ const rules = [
   },
   {
     id: "recursive-delete",
+    // PowerShell: Remove-Item or its aliases with any accepted -Recurse/-Force abbreviation.
     pattern:
-      /\brm\s+[^;&|]*(?:-[a-z]*r[a-z]*f|-[a-z]*f[a-z]*r)\b|\bRemove-Item\b(?=[^\r\n]*-(?:Recurse|r)\b)(?=[^\r\n]*-(?:Force|fo)\b)/i,
+      /\brm\s+[^;&|]*(?:-[a-z]*r[a-z]*f|-[a-z]*f[a-z]*r)\b|\b(?:Remove-Item|ri|rm|del|erase|rd|rmdir)\b(?=[^\r\n]*\s-r(?:e(?:c(?:u(?:r(?:se?)?)?)?)?)?\b)(?=[^\r\n]*\s-fo(?:r(?:ce?)?)?\b)/i,
     reason: "Recursive forced deletion is disabled in safe mode",
   },
   {

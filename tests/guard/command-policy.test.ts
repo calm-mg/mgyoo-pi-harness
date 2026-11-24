@@ -9,6 +9,9 @@ describe("classifyCommand", () => {
     ["diskpart", "system-administration"],
     ["systemctl stop sshd", "system-administration"],
     ["Remove-Item -Recurse -Force build", "recursive-delete"],
+    ["rm -Recurse -Force build", "recursive-delete"],
+    ["ri build -fo -r", "recursive-delete"],
+    ["del -Rec -Forc .\\build", "recursive-delete"],
     ["cat .env", "secret-access"],
     ["cp id_rsa copied-key", "secret-access"],
     ["Get-Content client.pem", "secret-access"],
@@ -22,6 +25,8 @@ describe("classifyCommand", () => {
     "git diff --check",
     "rm build/output.tmp",
     "Remove-Item build/output.tmp",
+    "Remove-Item -Recurse build",
+    "Remove-Item -Force output.tmp",
   ])("allows %s", (command) => {
     expect(classifyCommand(command)).toEqual({ allowed: true });
   });

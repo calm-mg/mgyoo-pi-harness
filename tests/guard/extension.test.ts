@@ -88,6 +88,16 @@ describe("workspace guard extension", () => {
     });
   });
 
+  it("applies the command policy to the PowerShell tool", async () => {
+    const call = createHarness().handlers.get("tool_call")!;
+    const command = (value: string) => call({ toolName: "powershell", input: { command: value } }, { cwd: process.cwd() });
+    expect(await command("Remove-Item -Recurse -Force build")).toEqual({
+      block: true,
+      reason: "Recursive forced deletion is disabled in safe mode",
+    });
+    expect(await command("Get-ChildItem")).toBeUndefined();
+  });
+
   it("shows a visible safe-mode status", async () => {
     const setStatus = vi.fn();
     const { handlers } = createHarness();

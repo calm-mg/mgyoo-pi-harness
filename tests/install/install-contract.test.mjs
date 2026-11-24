@@ -116,6 +116,7 @@ it("repoints the command after the checkout moves, including non-ASCII and shell
   cpSync(path.join(repo, `install.${extension}`), path.join(first, `install.${extension}`));
   cpSync(path.join(repo, "scripts", "bootstrap.mjs"), path.join(first, "scripts", "bootstrap.mjs"));
   cpSync(path.join(repo, "lib"), path.join(first, "lib"), { recursive: true });
+  cpSync(path.join(repo, "package.json"), path.join(first, "package.json"));
   success(lifecycle("install", { root: first }));
   renameSync(first, moved);
   success(lifecycle("install", { root: moved }));
